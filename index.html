@@ -430,15 +430,47 @@
 
         function previewPhoto(input) {
             if (input.files && input.files[0]) {
+                const file = input.files[0];
                 const reader = new FileReader();
+                
                 reader.onload = function(e) {
-                    currentPhotoBase64 = e.target.result;
-                    document.getElementById('photoPreviewImg').src = currentPhotoBase64;
-                    document.getElementById('photoPreviewContainer').classList.remove('hidden');
-                    document.getElementById('photoFileName').innerText = '已選擇相片';
-                    document.getElementById('removePhotoBtn').classList.remove('hidden');
+                    const img = new Image();
+                    img.onload = function() {
+                        // 設定最大寬高與壓縮比例，避免 iPhone 照片過大塞爆 localStorage
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // 壓縮為 JPEG 格式品質 0.7，大幅減小檔案體積
+                        currentPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                        document.getElementById('photoPreviewImg').src = currentPhotoBase64;
+                        document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                        document.getElementById('photoFileName').innerText = '已成功載入並壓縮照片';
+                        document.getElementById('removePhotoBtn').classList.remove('hidden');
+                    }
+                    img.src = e.target.result;
                 }
-                reader.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
             }
         }
 
