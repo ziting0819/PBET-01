@@ -431,12 +431,17 @@
         function previewPhoto(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                const reader = new FileReader();
+                const submitBtn = document.getElementById('submitBtn');
                 
+                // 讀取中先將儲存按鈕停用，避免未壓縮完就送出
+                submitBtn.disabled = true;
+                submitBtn.innerText = '圖片處理中...';
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
-                        // 設定最大寬高與壓縮比例，避免 iPhone 照片過大塞爆 localStorage
                         const MAX_WIDTH = 800;
                         const MAX_HEIGHT = 800;
                         let width = img.width;
@@ -460,13 +465,17 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        // 壓縮為 JPEG 格式品質 0.7，大幅減小檔案體積
                         currentPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
                         document.getElementById('photoPreviewImg').src = currentPhotoBase64;
                         document.getElementById('photoPreviewContainer').classList.remove('hidden');
                         document.getElementById('photoFileName').innerText = '已成功載入並壓縮照片';
                         document.getElementById('removePhotoBtn').classList.remove('hidden');
+
+                        // 圖片處理完畢，解鎖儲存按鈕
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = '儲存紀錄';
+                        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
                     img.src = e.target.result;
                 }
