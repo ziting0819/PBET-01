@@ -393,22 +393,39 @@
             document.getElementById('selectedIcon').value = iconClass;
         }
 
-        function handleAddCategory(e) {
+        function handleFormSubmit(e) {
             e.preventDefault();
-            const name = document.getElementById('newCatName').value;
-            const icon = document.getElementById('selectedIcon').value;
-            const newCat = {
-                id: 'custom_' + Date.now(),
-                name: name,
-                icon: icon,
-                color: 'bg-indigo-100 text-indigo-600'
+            
+            const amountVal = document.getElementById('txAmount').value;
+            const titleVal = document.getElementById('txTitle').value;
+            const categoryVal = document.getElementById('txCategory').value;
+            const dateVal = document.getElementById('txDate').value;
+
+            // 防呆檢查：如果漏了任一欄位，直接跳出提示告訴您
+            if (!amountVal) { alert('請填寫金額！'); return; }
+            if (!titleVal) { alert('請填寫項目名稱！'); return; }
+            if (!categoryVal) { alert('請選擇分類！'); return; }
+            if (!dateVal) { alert('請選擇日期！'); return; }
+
+            const id = document.getElementById('txId').value || 'tx_' + Date.now();
+            const txData = {
+                id,
+                type: currentType,
+                amount: parseFloat(amountVal),
+                title: titleVal,
+                category: categoryVal,
+                date: dateVal,
+                note: document.getElementById('txNote').value,
+                photo: currentPhotoBase64
             };
 
-            categories[currentType].push(newCat);
-            localStorage.setItem('simple_account_cats', JSON.stringify(categories));
-            renderCategories();
-            closeAddCatModal();
-            document.getElementById('newCatName').value = '';
+            const idx = transactions.findIndex(t => t.id === id);
+            if (idx >= 0) transactions[idx] = txData;
+            else transactions.unshift(txData);
+
+            localStorage.setItem('simple_account_txs', JSON.stringify(transactions));
+            renderApp();
+            closeModal();
         }
 
         function previewPhoto(input) {
