@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡單記帳 - 相片記帳本</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js 圖表庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts 霞鶩文楷 (LXGW WenKai TC，筆畫溫潤流暢、字庫完整不漏字) -->
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"LXGW WenKai TC"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'LXGW WenKai TC', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="transition-colors duration-300 min-h-screen pb-24" id="bodyBg">
+
+    <!-- 頂部導覽列：頁面切換 + 色系切換 (下拉選單) -->
+    <header class="shadow-sm sticky top-0 z-30 transition-colors duration-300" id="headerBg">
+        <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm" id="logoIcon"><i class="fa-solid fa-wallet"></i></span>
+                <!-- 功能頁面下拉選單 -->
+                <select id="viewSelect" onchange="switchView(this.value)" class="font-bold text-base bg-transparent border-none focus:outline-none cursor-pointer text-gray-800">
+                    <option value="overview">帳務總覽</option>
+                    <option value="records">交易明細</option>
+                    <option value="photos">照片展示</option>
+                    <option value="charts">圖表分析</option>
+                </select>
+            </div>
+            <!-- 色系切換下拉選單 -->
+            <div class="flex items-center space-x-1">
+                <label for="themeSelect" class="text-xs font-medium opacity-75 mr-1"><i class="fa-solid fa-palette"></i></label>
+                <select id="themeSelect" onchange="changeTheme(this.value)" class="text-xs rounded-lg px-2 py-1 border border-black/10 bg-white/80 focus:outline-none cursor-pointer">
+                    <option value="monet"> 莫內畫作</option>
+                    <option value="feather">羽毛暮光</option>
+                    <option value="wood">復古木紋</option>
+                    <option value="rose">玫瑰花園</option>
+                    <option value="spring">春日花卉</option>
+                    <option value="oil">油畫肌理</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 pt-4 space-y-4">
+        
+        <!-- 月份選擇卡片 -->
+        <section class="rounded-3xl p-4 shadow-sm text-gray-700 transition-all duration-300" id="cardBg">
+            <div class="flex justify-between items-center">
+                <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full bg-white/60 hover:bg-white flex items-center justify-center transition shadow-xs"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                <span id="currentMonthLabel" class="font-bold text-base">2026年 11月</span>
+                <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full bg-white/60 hover:bg-white flex items-center justify-center transition shadow-xs"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+            </div>
+        </section>
+
+        <!-- 頁面 1: 帳務總覽 -->
+        <div id="viewOverview" class="view-section space-y-4">
+            <div class="bg-white/80 rounded-3xl p-5 shadow-xs space-y-3">
+                <h3 class="text-xs font-bold opacity-60 uppercase">本月收支概況</h3>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">總收入</div>
+                        <div id="overviewIncome" class="font-bold text-base text-emerald-600">$0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">總支出</div>
+                        <div id="overviewExpense" class="font-bold text-base text-rose-600">$0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">結餘</div>
+                        <div id="overviewBalance" class="font-bold text-base">$0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between items-center px-1">
+                    <h2 class="text-xs font-bold opacity-70">近期紀錄</h2>
+                    <button onclick="switchView('records')" class="text-xs text-blue-500 font-medium">查看全部 <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+                <div id="recentList" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- 頁面 2: 交易明細 -->
+        <div id="viewRecords" class="view-section hidden space-y-3">
+            <div class="flex justify-between items-center px-1">
+                <h2 class="text-xs font-bold opacity-70">所有交易明細</h2>
+                <div class="text-xs opacity-60" id="recordCount">共 0 筆</div>
+            </div>
+            <div id="fullList" class="space-y-2"></div>
+        </div>
+
+        <!-- 頁面 3: 照片牆 / 收據庫 -->
+        <div id="viewPhotos" class="view-section hidden space-y-3">
+            <h2 class="text-xs font-bold opacity-70 px-1">展示牆</h2>
+            <div id="photoGrid" class="grid grid-cols-3 gap-2"></div>
+            <div id="noPhotosMsg" class="hidden text-center py-12 bg-white/40 rounded-3xl border border-dashed border-black/10 text-xs opacity-60">
+                本月尚未上傳任何相片或收據喔！
+            </div>
+        </div>
+
+        <!-- 頁面 4: 圖表分析 -->
+        <div id="viewCharts" class="view-section hidden space-y-4">
+            <div class="bg-white/80 rounded-3xl p-5 shadow-xs space-y-3">
+                <h3 class="text-xs font-bold opacity-70">本月支出分類統計</h3>
+                <div class="relative h-64 flex items-center justify-center">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 底部固定新增按鈕 -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-gradient-to-t from-white via-white/90 to-transparent z-20 flex justify-center items-center">
+        <button onclick="openModal()" id="mainActionBtn" class="w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 active:scale-95 transition-all">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+    </nav>
+
+    <!-- 新增/編輯 Modal -->
+    <div id="txModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalTitle" class="font-bold text-lg text-gray-800">新增記帳</h3>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="txForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="txId">
+
+                <div class="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-2xl">
+                    <button type="button" id="typeExpenseBtn" onclick="switchType('expense')" class="py-2 rounded-xl text-sm font-bold transition shadow-xs bg-white text-rose-600">支出</button>
+                    <button type="button" id="typeIncomeBtn" onclick="switchType('income')" class="py-2 rounded-xl text-sm font-bold transition text-gray-500">收入</button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">金額</label>
+                    <input type="number" id="txAmount" required placeholder="0" class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-lg font-bold">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">項目名稱</label>
+                    <input type="text" id="txTitle" required placeholder="例如：午餐、捷運..." class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                </div>
+
+                <!-- 分類欄位（含新增自訂分類按鈕） -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-medium text-gray-500">分類</label>
+                        <button type="button" onclick="openAddCatModal()" class="text-xs text-blue-500 hover:underline font-medium"><i class="fa-solid fa-plus"></i> 新增分類</button>
+                    </div>
+                    <div id="categoryContainer" class="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1"></div>
+                    <input type="hidden" id="txCategory" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">日期</label>
+                    <input type="date" id="txDate" required class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">相片 / 收據</label>
+                    <div class="flex items-center space-x-3">
+                        <label class="flex-1 cursor-pointer bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 rounded-2xl p-3 text-center transition flex items-center justify-center space-x-2 text-gray-600 text-sm">
+                            <i class="fa-solid fa-camera"></i>
+                            <span id="photoFileName">選擇照片</span>
+                            <input type="file" id="txPhoto" accept="image/*" onchange="previewPhoto(this)" class="hidden">
+                        </label>
+                        <button type="button" id="removePhotoBtn" onclick="clearPhoto()" class="hidden text-rose-500 p-3 hover:bg-rose-50 rounded-2xl"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div id="photoPreviewContainer" class="mt-2 hidden">
+                        <img id="photoPreviewImg" class="w-20 h-20 object-cover rounded-xl border border-gray-200">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">備註 (選填)</label>
+                    <input type="text" id="txNote" placeholder="補充說明..." class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full py-3.5 rounded-2xl text-white font-bold shadow-md">儲存紀錄</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 自訂新增分類 Modal -->
+    <div id="addCatModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h4 class="font-bold text-gray-800 text-base">新增自訂分類</h4>
+                <button onclick="closeAddCatModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form onsubmit="handleAddCategory(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">分類名稱</label>
+                    <input type="text" id="newCatName" required placeholder="例如：寵物、醫療、兼職..." class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">選擇圖示</label>
+                    <div id="iconPicker" class="grid grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-gray-100 rounded-xl">
+                        <!-- 圖示選單 -->
+                    </div>
+                    <input type="hidden" id="selectedIcon" value="fa-tag">
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl text-sm shadow-md hover:bg-emerald-600">確定新增</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 詳細資訊 Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <span id="detailIcon" class="w-10 h-10 rounded-2xl flex items-center justify-center text-white text-lg"></span>
+                    <div>
+                        <h4 id="detailTitle" class="font-bold text-gray-800 text-base"></h4>
+                        <span id="detailCategory" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"></span>
+                    </div>
+                </div>
+                <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between py-1 border-b border-gray-50"><span class="text-gray-400">金額</span><span id="detailAmount" class="font-bold"></span></div>
+                <div class="flex justify-between py-1 border-b border-gray-50"><span class="text-gray-400">日期</span><span id="detailDate" class="text-gray-700"></span></div>
+                <div class="flex justify-between py-1 border-b border-gray-50"><span class="text-gray-400">備註</span><span id="detailNote" class="text-gray-700"></span></div>
+            </div>
+
+            <div id="detailPhotoSection" class="hidden">
+                <span class="block text-xs font-medium text-gray-400 mb-1">相片/收據</span>
+                <img id="detailPhotoImg" class="w-full h-40 object-cover rounded-2xl border border-gray-200">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <button onclick="editCurrentTx()" class="py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-sm"><i class="fa-solid fa-pen mr-1"></i> 編輯</button>
+                <button onclick="deleteCurrentTx()" class="py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-medium rounded-xl text-sm"><i class="fa-solid fa-trash mr-1"></i> 刪除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const themes = {
+            monet: { bodyBg: 'bg-[#F7F8FA]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A2B59F]', cardBg: 'bg-gradient-to-br from-[#BFC8D7]/40 to-[#E2D2D2]/40 border border-white/60 shadow-sm', mainBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]', submitBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]' },
+            feather: { bodyBg: 'bg-[#F5F6F9]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#838BB2]', cardBg: 'bg-gradient-to-br from-[#CACFE3]/40 to-[#E4A99B]/30 border border-white/60 shadow-sm', mainBtn: 'bg-[#838BB2] hover:bg-[#727a9e]', submitBtn: 'bg-[#838BB2] hover:bg-[#727a9e]' },
+            wood: { bodyBg: 'bg-[#F4F4F2]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#83B1C9]', cardBg: 'bg-gradient-to-br from-[#C7D6DB]/40 to-[#C6D2BE]/40 border border-white/60 shadow-sm', mainBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]', submitBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]' },
+            rose: { bodyBg: 'bg-[#FAF6F5]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#B97687]', cardBg: 'bg-gradient-to-br from-[#E9CEB9]/40 to-[#E5BFBC]/40 border border-white/60 shadow-sm', mainBtn: 'bg-[#B97687] hover:bg-[#a46777]', submitBtn: 'bg-[#B97687] hover:bg-[#a46777]' },
+            spring: { bodyBg: 'bg-[#F4F6F4]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#C9DECF]', cardBg: 'bg-gradient-to-br from-[#F5DDAD]/30 to-[#F1BCAE]/30 border border-white/60 shadow-sm', mainBtn: 'bg-[#C9DECF] text-gray-700 hover:bg-[#b5ccbd]', submitBtn: 'bg-[#C9DECF] text-gray-700 hover:bg-[#b5ccbd]' },
+            oil: { bodyBg: 'bg-[#F2F5F5]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A3B6C5]', cardBg: 'bg-gradient-to-br from-[#D5E1DF]/50 to-[#EACACB]/40 border border-white/60 shadow-sm', mainBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]', submitBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]' }
+        };
+
+        const defaultCategories = {
+            expense: [
+                { id: 'food', name: '餐飲', icon: 'fa-utensils', color: 'bg-amber-100 text-amber-600' },
+                { id: 'transport', name: '交通', icon: 'fa-bus', color: 'bg-blue-100 text-blue-600' },
+                { id: 'shopping', name: '購物', icon: 'fa-bag-shopping', color: 'bg-rose-100 text-rose-600' },
+                { id: 'entertainment', name: '娛樂', icon: 'fa-gamepad', color: 'bg-purple-100 text-purple-600' },
+                { id: 'bills', name: '帳單', icon: 'fa-file-invoice-dollar', color: 'bg-emerald-100 text-emerald-600' },
+                { id: 'other', name: '其他', icon: 'fa-ellipsis', color: 'bg-gray-100 text-gray-600' }
+            ],
+            income: [
+                { id: 'salary', name: '薪水', icon: 'fa-wallet', color: 'bg-emerald-100 text-emerald-600' },
+                { id: 'bonus', name: '獎金', icon: 'fa-gift', color: 'bg-amber-100 text-amber-600' },
+                { id: 'investment', name: '投資', icon: 'fa-chart-line', color: 'bg-blue-100 text-blue-600' },
+                { id: 'parttime', name: '兼職', icon: 'fa-laptop-code', color: 'bg-purple-100 text-purple-600' },
+                { id: 'other_inc', name: '其他', icon: 'fa-plus', color: 'bg-gray-100 text-gray-600' }
+            ]
+        };
+
+        const availableIcons = ['fa-dog', 'fa-cat', 'fa-heart-pulse', 'fa-dumbbell', 'fa-spray-can-sparkles', 'fa-shirt', 'fa-plane', 'fa-book', 'fa-baby', 'fa-car', 'fa-house', 'fa-graduation-cap', 'fa-piggy-bank', 'fa-store', 'fa-utensils'];
+
+        let categories = JSON.parse(localStorage.getItem('simple_account_cats')) || defaultCategories;
+        let currentTheme = localStorage.getItem('simple_account_theme') || 'monet';
+        let transactions = JSON.parse(localStorage.getItem('simple_account_txs')) || [];
+        let currentDate = new Date();
+        let currentType = 'expense';
+        let currentPhotoBase64 = '';
+        let activeDetailId = null;
+        let chartInstance = null;
+
+        window.onload = function() {
+            document.getElementById('themeSelect').value = currentTheme;
+            applyTheme(currentTheme);
+            setTodayDate();
+            renderCategories();
+            renderApp();
+            renderIconPicker();
+        };
+
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            if (viewName === 'overview') document.getElementById('viewOverview').classList.remove('hidden');
+            if (viewName === 'records') document.getElementById('viewRecords').classList.remove('hidden');
+            if (viewName === 'photos') document.getElementById('viewPhotos').classList.remove('hidden');
+            if (viewName === 'charts') {
+                document.getElementById('viewCharts').classList.remove('hidden');
+                renderChart();
+            }
+        }
+
+        function changeTheme(name) {
+            currentTheme = name;
+            localStorage.setItem('simple_account_theme', name);
+            applyTheme(name);
+        }
+
+        function applyTheme(name) {
+            const t = themes[name] || themes.monet;
+            document.getElementById('bodyBg').className = `transition-colors duration-300 min-h-screen pb-24 ${t.bodyBg}`;
+            document.getElementById('headerBg').className = `shadow-sm sticky top-0 z-30 transition-colors duration-300 ${t.headerBg}`;
+            document.getElementById('logoIcon').className = `w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm ${t.logoIcon}`;
+            document.getElementById('cardBg').className = `rounded-3xl p-4 shadow-sm text-gray-700 transition-all duration-300 ${t.cardBg}`;
+            document.getElementById('mainActionBtn').className = `w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 active:scale-95 transition-all ${t.mainBtn}`;
+            document.getElementById('submitBtn').className = `w-full py-3.5 rounded-2xl text-white font-bold shadow-md transition-all ${t.submitBtn}`;
+        }
+
+        function setTodayDate() {
+            document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderApp();
+            if (!document.getElementById('viewCharts').classList.contains('hidden')) renderChart();
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryContainer');
+            container.innerHTML = '';
+            const list = categories[currentType];
+            list.forEach((cat, index) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `flex flex-col items-center justify-center p-2 rounded-2xl border border-gray-100 hover:bg-gray-50 category-btn ${index === 0 ? 'border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500' : ''}`;
+                btn.onclick = () => selectCategory(cat.id, btn);
+                btn.innerHTML = `<div class="w-9 h-9 rounded-xl flex items-center justify-center ${cat.color} mb-1"><i class="fa-solid ${cat.icon}"></i></div><span class="text-[11px] text-gray-600 truncate w-full text-center">${cat.name}</span>`;
+                container.appendChild(btn);
+            });
+            if (list.length > 0) document.getElementById('txCategory').value = list[0].id;
+        }
+
+        function selectCategory(catId, btnElement) {
+            document.querySelectorAll('.category-btn').forEach(b => b.className = 'flex flex-col items-center justify-center p-2 rounded-2xl border border-gray-100 hover:bg-gray-50 category-btn');
+            btnElement.className = 'flex flex-col items-center justify-center p-2 rounded-2xl border border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500 category-btn';
+            document.getElementById('txCategory').value = catId;
+        }
+
+        function switchType(type) {
+            currentType = type;
+            document.getElementById('typeExpenseBtn').className = type === 'expense' ? 'py-2 rounded-xl text-sm font-bold shadow-xs bg-white text-rose-600' : 'py-2 rounded-xl text-sm font-bold text-gray-500';
+            document.getElementById('typeIncomeBtn').className = type === 'income' ? 'py-2 rounded-xl text-sm font-bold shadow-xs bg-white text-emerald-600' : 'py-2 rounded-xl text-sm font-bold text-gray-500';
+            renderCategories();
+        }
+
+        function openAddCatModal() { document.getElementById('addCatModal').classList.remove('hidden'); }
+        function closeAddCatModal() { document.getElementById('addCatModal').classList.add('hidden'); }
+
+        function renderIconPicker() {
+            const picker = document.getElementById('iconPicker');
+            picker.innerHTML = availableIcons.map((ic, i) => `
+                <div onclick="selectIcon('${ic}', this)" class="icon-opt p-2 rounded-lg text-center cursor-pointer hover:bg-gray-100 ${i === 0 ? 'bg-emerald-100 border border-emerald-500' : ''}">
+                    <i class="fa-solid ${ic} text-gray-700"></i>
+                </div>
+            `).join('');
+        }
+
+        function selectIcon(iconClass, el) {
+            document.querySelectorAll('.icon-opt').forEach(opt => opt.className = 'icon-opt p-2 rounded-lg text-center cursor-pointer hover:bg-gray-100');
+            el.className = 'icon-opt p-2 rounded-lg text-center cursor-pointer bg-emerald-100 border border-emerald-500';
+            document.getElementById('selectedIcon').value = iconClass;
+        }
+
+        function handleAddCategory(e) {
+            e.preventDefault();
+            const name = document.getElementById('newCatName').value;
+            const icon = document.getElementById('selectedIcon').value;
+            const newCat = {
+                id: 'custom_' + Date.now(),
+                name: name,
+                icon: icon,
+                color: 'bg-indigo-100 text-indigo-600'
+            };
+
+            categories[currentType].push(newCat);
+            localStorage.setItem('simple_account_cats', JSON.stringify(categories));
+            renderCategories();
+            closeAddCatModal();
+            document.getElementById('newCatName').value = '';
+        }
+
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentPhotoBase64 = e.target.result;
+                    document.getElementById('photoPreviewImg').src = currentPhotoBase64;
+                    document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                    document.getElementById('photoFileName').innerText = '已選擇相片';
+                    document.getElementById('removePhotoBtn').classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearPhoto() {
+            currentPhotoBase64 = '';
+            document.getElementById('txPhoto').value = '';
+            document.getElementById('photoPreviewContainer').classList.add('hidden');
+            document.getElementById('photoFileName').innerText = '選擇照片';
+            document.getElementById('removePhotoBtn').classList.add('hidden');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('txId').value || 'tx_' + Date.now();
+            const txData = {
+                id,
+                type: currentType,
+                amount: parseFloat(document.getElementById('txAmount').value),
+                title: document.getElementById('txTitle').value,
+                category: document.getElementById('txCategory').value,
+                date: document.getElementById('txDate').value,
+                note: document.getElementById('txNote').value,
+                photo: currentPhotoBase64
+            };
+
+            const idx = transactions.findIndex(t => t.id === id);
+            if (idx >= 0) transactions[idx] = txData;
+            else transactions.unshift(txData);
+
+            localStorage.setItem('simple_account_txs', JSON.stringify(transactions));
+            renderApp();
+            closeModal();
+        }
+
+        function createItemHtml(t) {
+            const allCats = [...categories.expense, ...categories.income];
+            const catObj = allCats.find(c => c.id === t.category) || { name: '其他', icon: 'fa-circle', color: 'bg-gray-100 text-gray-600' };
+            
+            return `
+                <div onclick="openDetailModal('${t.id}')" class="bg-white/80 rounded-2xl p-3 shadow-xs hover:shadow-md transition flex items-center justify-between cursor-pointer">
+                    <div class="flex items-center space-x-3 overflow-hidden">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${catObj.color}">
+                            <i class="fa-solid ${catObj.icon}"></i>
+                        </div>
+                        <div class="truncate">
+                            <div class="font-bold text-gray-800 text-sm truncate">${t.title}</div>
+                            <div class="text-[11px] text-gray-400">${t.date}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3 shrink-0">
+                        <span class="font-bold text-sm ${t.type === 'income' ? 'text-emerald-600' : 'text-gray-800'}">
+                            ${t.type === 'income' ? '+' : '-'}$${t.amount.toLocaleString()}
+                        </span>
+                        ${t.photo ? `<img src="${t.photo}" class="w-8 h-8 rounded-lg object-cover border border-gray-100">` : '<div class="w-8"></div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderApp() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+            document.getElementById('currentMonthLabel').innerText = `${year}年 ${month}月`;
+
+            const filtered = transactions.filter(t => {
+                const d = new Date(t.date);
+                return d.getFullYear() === year && (d.getMonth() + 1) === month;
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            let inc = 0, exp = 0;
+            filtered.forEach(t => t.type === 'income' ? inc += t.amount : exp += t.amount);
+
+            document.getElementById('overviewIncome').innerText = `$${inc.toLocaleString()}`;
+            document.getElementById('overviewExpense').innerText = `$${exp.toLocaleString()}`;
+            const bal = inc - exp;
+            const balEl = document.getElementById('overviewBalance');
+            balEl.innerText = `$${bal.toLocaleString()}`;
+            balEl.className = `font-bold text-base ${bal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+            document.getElementById('recordCount').innerText = `共 ${filtered.length} 筆`;
+
+            document.getElementById('recentList').innerHTML = filtered.slice(0, 3).map(createItemHtml).join('');
+            document.getElementById('fullList').innerHTML = filtered.map(createItemHtml).join('');
+
+            const photoList = filtered.filter(t => t.photo);
+            const photoGrid = document.getElementById('photoGrid');
+            const noPhotosMsg = document.getElementById('noPhotosMsg');
+
+            if (photoList.length === 0) {
+                photoGrid.innerHTML = '';
+                noPhotosMsg.classList.remove('hidden');
+            } else {
+                noPhotosMsg.classList.add('hidden');
+                photoGrid.innerHTML = photoList.map(t => `
+                    <div onclick="openDetailModal('${t.id}')" class="aspect-square bg-white rounded-2xl overflow-hidden shadow-xs cursor-pointer hover:opacity-90 transition relative">
+                        <img src="${t.photo}" class="w-full h-full object-cover">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/40 text-white text-[10px] p-1 truncate text-center">${t.title}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function openModal() {
+            document.getElementById('txForm').reset();
+            document.getElementById('txId').value = '';
+            document.getElementById('modalTitle').innerText = '新增記帳';
+            switchType('expense');
+            setTodayDate();
+            clearPhoto();
+            document.getElementById('txModal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('txModal').classList.add('hidden'); }
+
+        function openDetailModal(id) {
+            activeDetailId = id;
+            const t = transactions.find(item => item.id === id);
+            if (!t) return;
+
+            const allCats = [...categories.expense, ...categories.income];
+            const catObj = allCats.find(c => c.id === t.category) || { name: '其他', icon: 'fa-circle', color: 'bg-gray-100 text-gray-600' };
+
+            document.getElementById('detailTitle').innerText = t.title;
+            document.getElementById('detailCategory').innerText = catObj.name;
+            document.getElementById('detailAmount').innerText = `${t.type === 'income' ? '+' : '-'}$${t.amount.toLocaleString()}`;
+            document.getElementById('detailAmount').className = `font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`;
+            document.getElementById('detailDate').innerText = t.date;
+            document.getElementById('detailNote').innerText = t.note || '-';
+
+            const iconEl = document.getElementById('detailIcon');
+            iconEl.className = `w-10 h-10 rounded-2xl flex items-center justify-center text-white ${catObj.color}`;
+            iconEl.innerHTML = `<i class="fa-solid ${catObj.icon}"></i>`;
+
+            const photoSec = document.getElementById('detailPhotoSection');
+            if (t.photo) {
+                document.getElementById('detailPhotoImg').src = t.photo;
+                photoSec.classList.remove('hidden');
+            } else photoSec.classList.add('hidden');
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
+
+        function editCurrentTx() {
+            const t = transactions.find(item => item.id === activeDetailId);
+            if (!t) return;
+            closeDetailModal();
+
+            document.getElementById('txId').value = t.id;
+            document.getElementById('modalTitle').innerText = '編輯記帳';
+            switchType(t.type);
+            document.getElementById('txAmount').value = t.amount;
+            document.getElementById('txTitle').value = t.title;
+            document.getElementById('txDate').value = t.date;
+            document.getElementById('txNote').value = t.note;
+
+            if (t.photo) {
+                currentPhotoBase64 = t.photo;
+                document.getElementById('photoPreviewImg').src = t.photo;
+                document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                document.getElementById('photoFileName').innerText = '已載入相片';
+                document.getElementById('removePhotoBtn').classList.remove('hidden');
+            } else clearPhoto();
+
+            document.getElementById('txModal').classList.remove('hidden');
+        }
+
+        function deleteCurrentTx() {
+            if (confirm('確定要刪除這筆紀錄嗎？')) {
+                transactions = transactions.filter(item => item.id !== activeDetailId);
+                localStorage.setItem('simple_account_txs', JSON.stringify(transactions));
+                renderApp();
+                closeDetailModal();
+            }
+        }
+
+        function renderChart() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+            const filtered = transactions.filter(t => {
+                const d = new Date(t.date);
+                return t.type === 'expense' && d.getFullYear() === year && (d.getMonth() + 1) === month;
+            });
+
+            const catTotals = {};
+            categories.expense.forEach(c => catTotals[c.id] = 0);
+            filtered.forEach(t => catTotals[t.category] = (catTotals[t.category] || 0) + t.amount);
+
+            const labels = [];
+            const data = [];
+            categories.expense.forEach(c => {
+                if (catTotals[c.id] > 0) {
+                    labels.push(c.name);
+                    data.push(catTotals[c.id]);
+                }
+            });
+
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            if (data.length === 0) {
+                ctx.clearRect(0, 0, 200, 200);
+                return;
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#E2D2D2', '#BFC8D7', '#E3E2B4', '#A2B59F', '#DAC2A5', '#C7CEEA', '#C9DECF', '#B97687'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { family: 'LXGW WenKai TC' } }
+                        } 
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
