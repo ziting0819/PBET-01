@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>簡單記帳 - 相片記帳本</title>
+    <title>日系繪本風 - 相片記帳本</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js 圖表庫 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome 圖示 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts 霞鶩文楷 (LXGW WenKai TC，筆畫溫潤流暢、字庫完整不漏字) -->
+    <!-- Google Fonts 霞鶩文楷 (LXGW WenKai TC) -->
     <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap" rel="stylesheet">
     
     <script>
@@ -28,28 +28,30 @@
         body { font-family: 'LXGW WenKai TC', sans-serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .storybook-card {
+            border: 2px dashed rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+        }
     </style>
 </head>
 <body class="transition-colors duration-300 min-h-screen pb-24" id="bodyBg">
 
-    <!-- 頂部導覽列：頁面切換 + 色系切換 (下拉選單) -->
-    <header class="shadow-sm sticky top-0 z-30 transition-colors duration-300" id="headerBg">
+    <!-- 頂部導覽列 -->
+    <header class="shadow-xs sticky top-0 z-30 transition-colors duration-300 backdrop-blur-md bg-white/70" id="headerBg">
         <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2">
-                <span class="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm" id="logoIcon"><i class="fa-solid fa-wallet"></i></span>
-                <!-- 功能頁面下拉選單 -->
-                <select id="viewSelect" onchange="switchView(this.value)" class="font-bold text-base bg-transparent border-none focus:outline-none cursor-pointer text-gray-800">
+                <span class="w-9 h-9 rounded-2xl flex items-center justify-center text-white shadow-xs" id="logoIcon"><i class="fa-solid fa-book-open"></i></span>
+                <select id="viewSelect" onchange="switchView(this.value)" class="font-bold text-base bg-transparent border-none focus:outline-none cursor-pointer text-gray-700">
                     <option value="overview">帳務總覽</option>
                     <option value="records">交易明細</option>
-                    <option value="photos">照片展示</option>
+                    <option value="photos">相片展示</option>
                     <option value="charts">圖表分析</option>
                 </select>
             </div>
-            <!-- 色系切換下拉選單 -->
-            <div class="flex items-center space-x-1">
-                <label for="themeSelect" class="text-xs font-medium opacity-75 mr-1"><i class="fa-solid fa-palette"></i></label>
-                <select id="themeSelect" onchange="changeTheme(this.value)" class="text-xs rounded-lg px-2 py-1 border border-black/10 bg-white/80 focus:outline-none cursor-pointer">
-                    <option value="monet"> 莫內畫作</option>
+            <div class="flex items-center space-x-1 bg-white/80 px-2 py-1 rounded-xl border border-black/5 shadow-2xs">
+                <label for="themeSelect" class="text-xs font-medium text-gray-500 mr-1"><i class="fa-solid fa-palette"></i></label>
+                <select id="themeSelect" onchange="changeTheme(this.value)" class="text-xs bg-transparent focus:outline-none cursor-pointer text-gray-700 font-medium">
+                    <option value="monet">莫內畫作</option>
                     <option value="feather">羽毛暮光</option>
                     <option value="wood">復古木紋</option>
                     <option value="rose">玫瑰花園</option>
@@ -63,28 +65,28 @@
     <main class="max-w-md mx-auto px-4 pt-4 space-y-4">
         
         <!-- 月份選擇卡片 -->
-        <section class="rounded-3xl p-4 shadow-sm text-gray-700 transition-all duration-300" id="cardBg">
+        <section class="rounded-3xl p-4 storybook-card text-gray-700 transition-all duration-300" id="cardBg">
             <div class="flex justify-between items-center">
-                <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full bg-white/60 hover:bg-white flex items-center justify-center transition shadow-xs"><i class="fa-solid fa-chevron-left text-xs"></i></button>
-                <span id="currentMonthLabel" class="font-bold text-base">2026年 11月</span>
-                <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full bg-white/60 hover:bg-white flex items-center justify-center transition shadow-xs"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                <button onclick="changeMonth(-1)" class="w-9 h-9 rounded-2xl bg-white/80 hover:bg-white flex items-center justify-center transition shadow-2xs text-gray-600"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                <span id="currentMonthLabel" class="font-bold text-base tracking-wider">2026年 11月</span>
+                <button onclick="changeMonth(1)" class="w-9 h-9 rounded-2xl bg-white/80 hover:bg-white flex items-center justify-center transition shadow-2xs text-gray-600"><i class="fa-solid fa-chevron-right text-xs"></i></button>
             </div>
         </section>
 
         <!-- 頁面 1: 帳務總覽 -->
         <div id="viewOverview" class="view-section space-y-4">
-            <div class="bg-white/80 rounded-3xl p-5 shadow-xs space-y-3">
-                <h3 class="text-xs font-bold opacity-60 uppercase">本月收支概況</h3>
+            <div class="bg-white/90 rounded-3xl p-5 storybook-card space-y-3">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">本月收支概況</h3>
                 <div class="grid grid-cols-3 gap-2 text-center">
-                    <div>
+                    <div class="bg-emerald-50/50 p-2.5 rounded-2xl">
                         <div class="text-xs text-gray-400 mb-1">總收入</div>
                         <div id="overviewIncome" class="font-bold text-base text-emerald-600">$0</div>
                     </div>
-                    <div>
+                    <div class="bg-rose-50/50 p-2.5 rounded-2xl">
                         <div class="text-xs text-gray-400 mb-1">總支出</div>
                         <div id="overviewExpense" class="font-bold text-base text-rose-600">$0</div>
                     </div>
-                    <div>
+                    <div class="bg-gray-50/80 p-2.5 rounded-2xl">
                         <div class="text-xs text-gray-400 mb-1">結餘</div>
                         <div id="overviewBalance" class="font-bold text-base">$0</div>
                     </div>
@@ -93,35 +95,35 @@
 
             <div class="space-y-2">
                 <div class="flex justify-between items-center px-1">
-                    <h2 class="text-xs font-bold opacity-70">近期紀錄</h2>
-                    <button onclick="switchView('records')" class="text-xs text-blue-500 font-medium">查看全部 <i class="fa-solid fa-arrow-right"></i></button>
+                    <h2 class="text-xs font-bold text-gray-500 tracking-wider">近期紀錄</h2>
+                    <button onclick="switchView('records')" class="text-xs text-gray-500 hover:text-gray-800 font-medium">查看全部 <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
-                <div id="recentList" class="space-y-2"></div>
+                <div id="recentList" class="space-y-2.5"></div>
             </div>
         </div>
 
         <!-- 頁面 2: 交易明細 -->
         <div id="viewRecords" class="view-section hidden space-y-3">
             <div class="flex justify-between items-center px-1">
-                <h2 class="text-xs font-bold opacity-70">所有交易明細</h2>
-                <div class="text-xs opacity-60" id="recordCount">共 0 筆</div>
+                <h2 class="text-xs font-bold text-gray-500 tracking-wider">所有交易明細</h2>
+                <div class="text-xs text-gray-400" id="recordCount">共 0 筆</div>
             </div>
-            <div id="fullList" class="space-y-2"></div>
+            <div id="fullList" class="space-y-2.5"></div>
         </div>
 
-        <!-- 頁面 3: 照片牆 / 收據庫 -->
+        <!-- 頁面 3: 照片牆 -->
         <div id="viewPhotos" class="view-section hidden space-y-3">
-            <h2 class="text-xs font-bold opacity-70 px-1">展示牆</h2>
-            <div id="photoGrid" class="grid grid-cols-3 gap-2"></div>
-            <div id="noPhotosMsg" class="hidden text-center py-12 bg-white/40 rounded-3xl border border-dashed border-black/10 text-xs opacity-60">
+            <h2 class="text-xs font-bold text-gray-500 tracking-wider px-1">相片展示牆</h2>
+            <div id="photoGrid" class="grid grid-cols-3 gap-2.5"></div>
+            <div id="noPhotosMsg" class="hidden text-center py-12 bg-white/60 rounded-3xl storybook-card text-xs text-gray-400">
                 本月尚未上傳任何相片或收據喔！
             </div>
         </div>
 
         <!-- 頁面 4: 圖表分析 -->
         <div id="viewCharts" class="view-section hidden space-y-4">
-            <div class="bg-white/80 rounded-3xl p-5 shadow-xs space-y-3">
-                <h3 class="text-xs font-bold opacity-70">本月支出分類統計</h3>
+            <div class="bg-white/90 rounded-3xl p-5 storybook-card space-y-3">
+                <h3 class="text-xs font-bold text-gray-500 tracking-wider">本月支出分類統計</h3>
                 <div class="relative h-64 flex items-center justify-center">
                     <canvas id="expenseChart"></canvas>
                 </div>
@@ -131,14 +133,14 @@
     </main>
 
     <!-- 底部固定新增按鈕 -->
-    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-gradient-to-t from-white via-white/90 to-transparent z-20 flex justify-center items-center">
-        <button onclick="openModal()" id="mainActionBtn" class="w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 active:scale-95 transition-all">
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-gradient-to-t from-white/90 via-white/50 to-transparent z-20 flex justify-center items-center">
+        <button onclick="openModal()" id="mainActionBtn" class="w-16 h-16 rounded-3xl shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 active:scale-95 transition-all">
             <i class="fa-solid fa-plus"></i>
         </button>
     </nav>
 
-    <!-- 新增/編輯 Modal -->
-    <div id="txModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <!-- 新增/編輯 Modal (點擊背景空白處可關閉) -->
+    <div id="txModal" onclick="checkCloseModal(event, 'txModal')" class="fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
         <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 id="modalTitle" class="font-bold text-lg text-gray-800">新增記帳</h3>
@@ -149,21 +151,41 @@
                 <input type="hidden" id="txId">
 
                 <div class="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-2xl">
-                    <button type="button" id="typeExpenseBtn" onclick="switchType('expense')" class="py-2 rounded-xl text-sm font-bold transition shadow-xs bg-white text-rose-600">支出</button>
-                    <button type="button" id="typeIncomeBtn" onclick="switchType('income')" class="py-2 rounded-xl text-sm font-bold transition text-gray-500">收入</button>
+                    <button type="button" id="typeExpenseBtn" onclick="switchType('expense')" class="py-2.5 rounded-xl text-sm font-bold transition shadow-xs bg-white text-rose-600">支出</button>
+                    <button type="button" id="typeIncomeBtn" onclick="switchType('income')" class="py-2.5 rounded-xl text-sm font-bold transition text-gray-500">收入</button>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">金額</label>
-                    <input type="number" id="txAmount" required placeholder="0" class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-lg font-bold">
+                <!-- 幣別與金額設定 -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">幣別</label>
+                        <select id="txCurrency" onchange="calculateConvertedAmount()" class="w-full px-3 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none text-sm font-bold">
+                            <option value="TWD">TWD 台幣</option>
+                            <option value="JPY">JPY 日幣</option>
+                            <option value="USD">USD 美元</option>
+                            <option value="EUR">EUR 歐元</option>
+                            <option value="KRW">KRW 韓元</option>
+                            <option value="CNY">CNY 人民幣</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">金額 (外幣或台幣)</label>
+                        <input type="number" step="any" id="txAmount" oninput="calculateConvertedAmount()" required placeholder="0" class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-lg font-bold">
+                    </div>
+                </div>
+
+                <!-- 自動換算台幣提示區 -->
+                <div id="conversionInfo" class="hidden text-xs bg-emerald-50 text-emerald-700 p-2.5 rounded-xl flex justify-between items-center">
+                    <span id="exchangeRateText">匯率換算中...</span>
+                    <span id="convertedTwdText" class="font-bold text-sm"></span>
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">項目名稱</label>
-                    <input type="text" id="txTitle" required placeholder="例如：午餐、捷運..." class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    <input type="text" id="txTitle" required placeholder="例如：午餐、日本藥妝..." class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
                 </div>
 
-                <!-- 分類欄位（含新增自訂分類按鈕） -->
+                <!-- 分類欄位 -->
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-xs font-medium text-gray-500">分類</label>
@@ -175,7 +197,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">日期</label>
-                    <input type="date" id="txDate" required class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    <input type="date" id="txDate" required class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
                 </div>
 
                 <div>
@@ -189,22 +211,22 @@
                         <button type="button" id="removePhotoBtn" onclick="clearPhoto()" class="hidden text-rose-500 p-3 hover:bg-rose-50 rounded-2xl"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                     <div id="photoPreviewContainer" class="mt-2 hidden">
-                        <img id="photoPreviewImg" class="w-20 h-20 object-cover rounded-xl border border-gray-200">
+                        <img id="photoPreviewImg" class="w-20 h-20 object-cover rounded-2xl border border-gray-200">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">備註 (選填)</label>
-                    <input type="text" id="txNote" placeholder="補充說明..." class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    <input type="text" id="txNote" placeholder="補充說明..." class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
                 </div>
 
-                <button type="submit" id="submitBtn" class="w-full py-3.5 rounded-2xl text-white font-bold shadow-md">儲存紀錄</button>
+                <button type="submit" id="submitBtn" class="w-full py-3.5 rounded-2xl text-white font-bold shadow-md transition-all">儲存紀錄</button>
             </form>
         </div>
     </div>
 
     <!-- 自訂新增分類 Modal -->
-    <div id="addCatModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div id="addCatModal" onclick="checkCloseModal(event, 'addCatModal')" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <h4 class="font-bold text-gray-800 text-base">新增自訂分類</h4>
@@ -219,9 +241,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">選擇圖示</label>
-                    <div id="iconPicker" class="grid grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-gray-100 rounded-xl">
-                        <!-- 圖示選單 -->
-                    </div>
+                    <div id="iconPicker" class="grid grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-gray-100 rounded-xl"></div>
                     <input type="hidden" id="selectedIcon" value="fa-tag">
                 </div>
 
@@ -230,8 +250,8 @@
         </div>
     </div>
 
-    <!-- 詳細資訊 Modal -->
-    <div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <!-- 詳細資訊 Modal (點擊背景空白處可關閉) -->
+    <div id="detailModal" onclick="checkCloseModal(event, 'detailModal')" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <div class="flex items-center space-x-2">
@@ -246,13 +266,15 @@
 
             <div class="space-y-2 text-sm">
                 <div class="flex justify-between py-1 border-b border-gray-50"><span class="text-gray-400">金額</span><span id="detailAmount" class="font-bold"></span></div>
+                <div id="detailForeignRow" class="hidden flex justify-between py-1 border-b border-gray-50"><span class="text-gray-400">外幣原額</span><span id="detailForeignAmount" class="text-gray-700 font-medium"></span></div>
                 <div class="flex justify-between py-1 border-b border-gray-50"><span class="text-gray-400">日期</span><span id="detailDate" class="text-gray-700"></span></div>
                 <div class="flex justify-between py-1 border-b border-gray-50"><span class="text-gray-400">備註</span><span id="detailNote" class="text-gray-700"></span></div>
             </div>
 
+            <!-- 點擊可看大圖的照片區域 -->
             <div id="detailPhotoSection" class="hidden">
-                <span class="block text-xs font-medium text-gray-400 mb-1">相片/收據</span>
-                <img id="detailPhotoImg" class="w-full h-40 object-cover rounded-2xl border border-gray-200">
+                <span class="block text-xs font-medium text-gray-400 mb-1">相片/收據 (點擊可看大圖)</span>
+                <img id="detailPhotoImg" onclick="openLightbox(this.src)" class="w-full h-40 object-cover rounded-2xl border border-gray-200 cursor-pointer hover:opacity-90 transition shadow-2xs">
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-2">
@@ -262,14 +284,29 @@
         </div>
     </div>
 
+    <!-- 圖片全螢幕檢視 Lightbox -->
+    <div id="lightboxModal" onclick="closeLightbox()" class="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 hidden cursor-zoom-out">
+        <img id="lightboxImg" class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain">
+    </div>
+
     <script>
+        // 預設匯率 (相對於 TWD 台幣)
+        const exchangeRates = {
+            TWD: 1,
+            JPY: 0.21,  // 1日圓 約 0.21台幣
+            USD: 32.5,  // 1美元 約 32.5台幣
+            EUR: 35.0,  // 1歐元 約 35.0台幣
+            KRW: 0.024, // 1韓元 約 0.024台幣
+            CNY: 4.5    // 1人民幣 約 4.5台幣
+        };
+
         const themes = {
-            monet: { bodyBg: 'bg-[#F7F8FA]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A2B59F]', cardBg: 'bg-gradient-to-br from-[#BFC8D7]/40 to-[#E2D2D2]/40 border border-white/60 shadow-sm', mainBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]', submitBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]' },
-            feather: { bodyBg: 'bg-[#F5F6F9]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#838BB2]', cardBg: 'bg-gradient-to-br from-[#CACFE3]/40 to-[#E4A99B]/30 border border-white/60 shadow-sm', mainBtn: 'bg-[#838BB2] hover:bg-[#727a9e]', submitBtn: 'bg-[#838BB2] hover:bg-[#727a9e]' },
-            wood: { bodyBg: 'bg-[#F4F4F2]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#83B1C9]', cardBg: 'bg-gradient-to-br from-[#C7D6DB]/40 to-[#C6D2BE]/40 border border-white/60 shadow-sm', mainBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]', submitBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]' },
-            rose: { bodyBg: 'bg-[#FAF6F5]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#B97687]', cardBg: 'bg-gradient-to-br from-[#E9CEB9]/40 to-[#E5BFBC]/40 border border-white/60 shadow-sm', mainBtn: 'bg-[#B97687] hover:bg-[#a46777]', submitBtn: 'bg-[#B97687] hover:bg-[#a46777]' },
-            spring: { bodyBg: 'bg-[#F4F6F4]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#C9DECF]', cardBg: 'bg-gradient-to-br from-[#F5DDAD]/30 to-[#F1BCAE]/30 border border-white/60 shadow-sm', mainBtn: 'bg-[#C9DECF] text-gray-700 hover:bg-[#b5ccbd]', submitBtn: 'bg-[#C9DECF] text-gray-700 hover:bg-[#b5ccbd]' },
-            oil: { bodyBg: 'bg-[#F2F5F5]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A3B6C5]', cardBg: 'bg-gradient-to-br from-[#D5E1DF]/50 to-[#EACACB]/40 border border-white/60 shadow-sm', mainBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]', submitBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]' }
+            monet: { bodyBg: 'bg-[#F9FAF8]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A2B59F]', cardBg: 'bg-gradient-to-br from-[#E8EDE6]/70 to-[#F2EBEB]/70 storybook-card', mainBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]', submitBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]' },
+            feather: { bodyBg: 'bg-[#F7F8FA]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#838BB2]', cardBg: 'bg-gradient-to-br from-[#E2E6F2]/70 to-[#F5DDD5]/60 storybook-card', mainBtn: 'bg-[#838BB2] hover:bg-[#727a9e]', submitBtn: 'bg-[#838BB2] hover:bg-[#727a9e]' },
+            wood: { bodyBg: 'bg-[#F6F6F4]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#83B1C9]', cardBg: 'bg-gradient-to-br from-[#E5ECEE]/70 to-[#E4EBE1]/70 storybook-card', mainBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]', submitBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]' },
+            rose: { bodyBg: 'bg-[#FAF7F6]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#B97687]', cardBg: 'bg-gradient-to-br from-[#F4E8E1]/70 to-[#F1E4E3]/70 storybook-card', mainBtn: 'bg-[#B97687] hover:bg-[#a46777]', submitBtn: 'bg-[#B97687] hover:bg-[#a46777]' },
+            spring: { bodyBg: 'bg-[#F5F7F5]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A8C5B2]', cardBg: 'bg-gradient-to-br from-[#FAF0D9]/60 to-[#F8DCD5]/60 storybook-card', mainBtn: 'bg-[#A8C5B2] text-white hover:bg-[#94b19e]', submitBtn: 'bg-[#A8C5B2] text-white hover:bg-[#94b19e]' },
+            oil: { bodyBg: 'bg-[#F3F6F6]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A3B6C5]', cardBg: 'bg-gradient-to-br from-[#E2ECEB]/70 to-[#F2E8E8]/70 storybook-card', mainBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]', submitBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]' }
         };
 
         const defaultCategories = {
@@ -310,6 +347,43 @@
             renderIconPicker();
         };
 
+        // 點擊背景空白處關閉視窗函式
+        function checkCloseModal(event, modalId) {
+            if (event.target.id === modalId) {
+                if (modalId === 'txModal') closeModal();
+                else if (modalId === 'addCatModal') closeAddCatModal();
+                else if (modalId === 'detailModal') closeDetailModal();
+            }
+        }
+
+        // 圖片 Lightbox 放大檢視
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightboxModal').classList.remove('hidden');
+        }
+        function closeLightbox() {
+            document.getElementById('lightboxModal').classList.add('hidden');
+        }
+
+        // 外幣自動換算計算
+        function calculateConvertedAmount() {
+            const currency = document.getElementById('txCurrency').value;
+            const amountInput = parseFloat(document.getElementById('txAmount').value) || 0;
+            const infoBox = document.getElementById('conversionInfo');
+            
+            if (currency === 'TWD' || amountInput === 0) {
+                infoBox.classList.add('hidden');
+                return;
+            }
+
+            const rate = exchangeRates[currency] || 1;
+            const converted = Math.round(amountInput * rate * 100) / 100;
+            
+            document.getElementById('exchangeRateText').innerText = `使用參考匯率 1 ${currency} ≈ ${rate} TWD`;
+            document.getElementById('convertedTwdText').innerText = `≈ NT$ ${converted.toLocaleString()}`;
+            infoBox.classList.remove('hidden');
+        }
+
         function switchView(viewName) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             if (viewName === 'overview') document.getElementById('viewOverview').classList.remove('hidden');
@@ -330,10 +404,10 @@
         function applyTheme(name) {
             const t = themes[name] || themes.monet;
             document.getElementById('bodyBg').className = `transition-colors duration-300 min-h-screen pb-24 ${t.bodyBg}`;
-            document.getElementById('headerBg').className = `shadow-sm sticky top-0 z-30 transition-colors duration-300 ${t.headerBg}`;
-            document.getElementById('logoIcon').className = `w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm ${t.logoIcon}`;
-            document.getElementById('cardBg').className = `rounded-3xl p-4 shadow-sm text-gray-700 transition-all duration-300 ${t.cardBg}`;
-            document.getElementById('mainActionBtn').className = `w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 active:scale-95 transition-all ${t.mainBtn}`;
+            document.getElementById('headerBg').className = `shadow-xs sticky top-0 z-30 transition-colors duration-300 backdrop-blur-md ${t.headerBg}`;
+            document.getElementById('logoIcon').className = `w-9 h-9 rounded-2xl flex items-center justify-center text-white shadow-xs ${t.logoIcon}`;
+            document.getElementById('cardBg').className = `rounded-3xl p-4 text-gray-700 transition-all duration-300 ${t.cardBg}`;
+            document.getElementById('mainActionBtn').className = `w-16 h-16 rounded-3xl shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 active:scale-95 transition-all ${t.mainBtn}`;
             document.getElementById('submitBtn').className = `w-full py-3.5 rounded-2xl text-white font-bold shadow-md transition-all ${t.submitBtn}`;
         }
 
@@ -354,7 +428,7 @@
             list.forEach((cat, index) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = `flex flex-col items-center justify-center p-2 rounded-2xl border border-gray-100 hover:bg-gray-50 category-btn ${index === 0 ? 'border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500' : ''}`;
+                btn.className = `flex flex-col items-center justify-center p-2 rounded-2xl border border-gray-100 hover:bg-gray-50 category-btn ${index === 0 ? 'border-emerald-400 bg-emerald-50/50 ring-1 ring-emerald-400' : ''}`;
                 btn.onclick = () => selectCategory(cat.id, btn);
                 btn.innerHTML = `<div class="w-9 h-9 rounded-xl flex items-center justify-center ${cat.color} mb-1"><i class="fa-solid ${cat.icon}"></i></div><span class="text-[11px] text-gray-600 truncate w-full text-center">${cat.name}</span>`;
                 container.appendChild(btn);
@@ -364,14 +438,14 @@
 
         function selectCategory(catId, btnElement) {
             document.querySelectorAll('.category-btn').forEach(b => b.className = 'flex flex-col items-center justify-center p-2 rounded-2xl border border-gray-100 hover:bg-gray-50 category-btn');
-            btnElement.className = 'flex flex-col items-center justify-center p-2 rounded-2xl border border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500 category-btn';
+            btnElement.className = 'flex flex-col items-center justify-center p-2 rounded-2xl border border-emerald-400 bg-emerald-50/50 ring-1 ring-emerald-400 category-btn';
             document.getElementById('txCategory').value = catId;
         }
 
         function switchType(type) {
             currentType = type;
-            document.getElementById('typeExpenseBtn').className = type === 'expense' ? 'py-2 rounded-xl text-sm font-bold shadow-xs bg-white text-rose-600' : 'py-2 rounded-xl text-sm font-bold text-gray-500';
-            document.getElementById('typeIncomeBtn').className = type === 'income' ? 'py-2 rounded-xl text-sm font-bold shadow-xs bg-white text-emerald-600' : 'py-2 rounded-xl text-sm font-bold text-gray-500';
+            document.getElementById('typeExpenseBtn').className = type === 'expense' ? 'py-2.5 rounded-xl text-sm font-bold shadow-2xs bg-white text-rose-600' : 'py-2.5 rounded-xl text-sm font-bold text-gray-500';
+            document.getElementById('typeIncomeBtn').className = type === 'income' ? 'py-2.5 rounded-xl text-sm font-bold shadow-2xs bg-white text-emerald-600' : 'py-2.5 rounded-xl text-sm font-bold text-gray-500';
             renderCategories();
         }
 
@@ -381,51 +455,34 @@
         function renderIconPicker() {
             const picker = document.getElementById('iconPicker');
             picker.innerHTML = availableIcons.map((ic, i) => `
-                <div onclick="selectIcon('${ic}', this)" class="icon-opt p-2 rounded-lg text-center cursor-pointer hover:bg-gray-100 ${i === 0 ? 'bg-emerald-100 border border-emerald-500' : ''}">
+                <div onclick="selectIcon('${ic}', this)" class="icon-opt p-2 rounded-xl text-center cursor-pointer hover:bg-gray-100 ${i === 0 ? 'bg-emerald-100 border border-emerald-400' : ''}">
                     <i class="fa-solid ${ic} text-gray-700"></i>
                 </div>
             `).join('');
         }
 
         function selectIcon(iconClass, el) {
-            document.querySelectorAll('.icon-opt').forEach(opt => opt.className = 'icon-opt p-2 rounded-lg text-center cursor-pointer hover:bg-gray-100');
-            el.className = 'icon-opt p-2 rounded-lg text-center cursor-pointer bg-emerald-100 border border-emerald-500';
+            document.querySelectorAll('.icon-opt').forEach(opt => opt.className = 'icon-opt p-2 rounded-xl text-center cursor-pointer hover:bg-gray-100');
+            el.className = 'icon-opt p-2 rounded-xl text-center cursor-pointer bg-emerald-100 border border-emerald-400';
             document.getElementById('selectedIcon').value = iconClass;
         }
 
-        function handleFormSubmit(e) {
+        function handleAddCategory(e) {
             e.preventDefault();
-            
-            const amountVal = document.getElementById('txAmount').value;
-            const titleVal = document.getElementById('txTitle').value;
-            const categoryVal = document.getElementById('txCategory').value;
-            const dateVal = document.getElementById('txDate').value;
-
-            // 防呆檢查：如果漏了任一欄位，直接跳出提示告訴您
-            if (!amountVal) { alert('請填寫金額！'); return; }
-            if (!titleVal) { alert('請填寫項目名稱！'); return; }
-            if (!categoryVal) { alert('請選擇分類！'); return; }
-            if (!dateVal) { alert('請選擇日期！'); return; }
-
-            const id = document.getElementById('txId').value || 'tx_' + Date.now();
-            const txData = {
-                id,
-                type: currentType,
-                amount: parseFloat(amountVal),
-                title: titleVal,
-                category: categoryVal,
-                date: dateVal,
-                note: document.getElementById('txNote').value,
-                photo: currentPhotoBase64
+            const name = document.getElementById('newCatName').value;
+            const icon = document.getElementById('selectedIcon').value;
+            const newCat = {
+                id: 'custom_' + Date.now(),
+                name: name,
+                icon: icon,
+                color: 'bg-indigo-100 text-indigo-600'
             };
 
-            const idx = transactions.findIndex(t => t.id === id);
-            if (idx >= 0) transactions[idx] = txData;
-            else transactions.unshift(txData);
-
-            localStorage.setItem('simple_account_txs', JSON.stringify(transactions));
-            renderApp();
-            closeModal();
+            categories[currentType].push(newCat);
+            localStorage.setItem('simple_account_cats', JSON.stringify(categories));
+            renderCategories();
+            closeAddCatModal();
+            document.getElementById('newCatName').value = '';
         }
 
         function previewPhoto(input) {
@@ -433,7 +490,6 @@
                 const file = input.files[0];
                 const submitBtn = document.getElementById('submitBtn');
                 
-                // 讀取中先將儲存按鈕停用，避免未壓縮完就送出
                 submitBtn.disabled = true;
                 submitBtn.innerText = '圖片處理中...';
                 submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -472,7 +528,6 @@
                         document.getElementById('photoFileName').innerText = '已成功載入並壓縮照片';
                         document.getElementById('removePhotoBtn').classList.remove('hidden');
 
-                        // 圖片處理完畢，解鎖儲存按鈕
                         submitBtn.disabled = false;
                         submitBtn.innerText = '儲存紀錄';
                         submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -493,14 +548,31 @@
 
         function handleFormSubmit(e) {
             e.preventDefault();
+            const currency = document.getElementById('txCurrency').value;
+            const rawAmount = parseFloat(document.getElementById('txAmount').value);
+            const titleVal = document.getElementById('txTitle').value;
+            const categoryVal = document.getElementById('txCategory').value;
+            const dateVal = document.getElementById('txDate').value;
+
+            if (!rawAmount) { alert('請填寫金額！'); return; }
+            if (!titleVal) { alert('請填寫項目名稱！'); return; }
+            if (!categoryVal) { alert('請選擇分類！'); return; }
+            if (!dateVal) { alert('請選擇日期！'); return; }
+
+            // 計算最終台幣金額
+            const rate = exchangeRates[currency] || 1;
+            const finalTwdAmount = Math.round(rawAmount * rate * 100) / 100;
+
             const id = document.getElementById('txId').value || 'tx_' + Date.now();
             const txData = {
                 id,
                 type: currentType,
-                amount: parseFloat(document.getElementById('txAmount').value),
-                title: document.getElementById('txTitle').value,
-                category: document.getElementById('txCategory').value,
-                date: document.getElementById('txDate').value,
+                currency,
+                rawAmount,
+                amount: finalTwdAmount, // 帳務計算統一使用台幣
+                title: titleVal,
+                category: categoryVal,
+                date: dateVal,
                 note: document.getElementById('txNote').value,
                 photo: currentPhotoBase64
             };
@@ -518,22 +590,28 @@
             const allCats = [...categories.expense, ...categories.income];
             const catObj = allCats.find(c => c.id === t.category) || { name: '其他', icon: 'fa-circle', color: 'bg-gray-100 text-gray-600' };
             
+            // 外幣標示處理
+            const currencyText = (t.currency && t.currency !== 'TWD') ? `<span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded mr-1">${t.currency} ${t.rawAmount}</span>` : '';
+
             return `
-                <div onclick="openDetailModal('${t.id}')" class="bg-white/80 rounded-2xl p-3 shadow-xs hover:shadow-md transition flex items-center justify-between cursor-pointer">
+                <div onclick="openDetailModal('${t.id}')" class="bg-white/90 rounded-2xl p-3.5 storybook-card hover:shadow-md transition flex items-center justify-between cursor-pointer">
                     <div class="flex items-center space-x-3 overflow-hidden">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${catObj.color}">
+                        <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${catObj.color}">
                             <i class="fa-solid ${catObj.icon}"></i>
                         </div>
                         <div class="truncate">
                             <div class="font-bold text-gray-800 text-sm truncate">${t.title}</div>
-                            <div class="text-[11px] text-gray-400">${t.date}</div>
+                            <div class="text-[11px] text-gray-400 flex items-center">${t.date}</div>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-3 shrink-0">
-                        <span class="font-bold text-sm ${t.type === 'income' ? 'text-emerald-600' : 'text-gray-800'}">
-                            ${t.type === 'income' ? '+' : '-'}$${t.amount.toLocaleString()}
-                        </span>
-                        ${t.photo ? `<img src="${t.photo}" class="w-8 h-8 rounded-lg object-cover border border-gray-100">` : '<div class="w-8"></div>'}
+                    <div class="flex items-center space-x-2 shrink-0 text-right">
+                        <div>
+                            ${currencyText}
+                            <span class="font-bold text-sm ${t.type === 'income' ? 'text-emerald-600' : 'text-gray-800'}">
+                                ${t.type === 'income' ? '+' : '-'}$${t.amount.toLocaleString()}
+                            </span>
+                        </div>
+                        ${t.photo ? `<img src="${t.photo}" class="w-9 h-9 rounded-xl object-cover border border-gray-100 shadow-2xs">` : '<div class="w-9"></div>'}
                     </div>
                 </div>
             `;
@@ -573,9 +651,9 @@
             } else {
                 noPhotosMsg.classList.add('hidden');
                 photoGrid.innerHTML = photoList.map(t => `
-                    <div onclick="openDetailModal('${t.id}')" class="aspect-square bg-white rounded-2xl overflow-hidden shadow-xs cursor-pointer hover:opacity-90 transition relative">
+                    <div onclick="openDetailModal('${t.id}')" class="aspect-square bg-white rounded-2xl overflow-hidden storybook-card cursor-pointer hover:opacity-90 transition relative">
                         <img src="${t.photo}" class="w-full h-full object-cover">
-                        <div class="absolute bottom-0 inset-x-0 bg-black/40 text-white text-[10px] p-1 truncate text-center">${t.title}</div>
+                        <div class="absolute bottom-0 inset-x-0 bg-black/50 backdrop-blur-2xs text-white text-[10px] p-1.5 truncate text-center">${t.title}</div>
                     </div>
                 `).join('');
             }
@@ -585,6 +663,8 @@
             document.getElementById('txForm').reset();
             document.getElementById('txId').value = '';
             document.getElementById('modalTitle').innerText = '新增記帳';
+            document.getElementById('txCurrency').value = 'TWD';
+            document.getElementById('conversionInfo').classList.add('hidden');
             switchType('expense');
             setTodayDate();
             clearPhoto();
@@ -603,8 +683,18 @@
 
             document.getElementById('detailTitle').innerText = t.title;
             document.getElementById('detailCategory').innerText = catObj.name;
-            document.getElementById('detailAmount').innerText = `${t.type === 'income' ? '+' : '-'}$${t.amount.toLocaleString()}`;
+            document.getElementById('detailAmount').innerText = `${t.type === 'income' ? '+' : '-'}$${t.amount.toLocaleString()} 台幣`;
             document.getElementById('detailAmount').className = `font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`;
+
+            // 外幣細節列顯示
+            const foreignRow = document.getElementById('detailForeignRow');
+            if (t.currency && t.currency !== 'TWD') {
+                document.getElementById('detailForeignAmount').innerText = `${t.currency} ${t.rawAmount.toLocaleString()}`;
+                foreignRow.classList.remove('hidden');
+            } else {
+                foreignRow.classList.add('hidden');
+            }
+
             document.getElementById('detailDate').innerText = t.date;
             document.getElementById('detailNote').innerText = t.note || '-';
 
@@ -631,7 +721,9 @@
             document.getElementById('txId').value = t.id;
             document.getElementById('modalTitle').innerText = '編輯記帳';
             switchType(t.type);
-            document.getElementById('txAmount').value = t.amount;
+            document.getElementById('txCurrency').value = t.currency || 'TWD';
+            document.getElementById('txAmount').value = t.rawAmount || t.amount;
+            calculateConvertedAmount();
             document.getElementById('txTitle').value = t.title;
             document.getElementById('txDate').value = t.date;
             document.getElementById('txNote').value = t.note;
