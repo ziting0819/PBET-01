@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日系繪本風 - 相片記帳本</title>
+    <title>日系繪本風 - 相片記帳與分帳本</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js 圖表庫 -->
@@ -44,8 +44,10 @@
                 <select id="viewSelect" onchange="switchView(this.value)" class="font-bold text-base bg-transparent border-none focus:outline-none cursor-pointer text-gray-700">
                     <option value="overview">帳務總覽</option>
                     <option value="records">交易明細</option>
-                    <option value="photos">相片展示</option>
+                    <option value="photos">相片展示櫃</option>
+                    <option value="split">多人分帳</option>
                     <option value="charts">圖表分析</option>
+                    <option value="settings">匯率設定</option>
                 </select>
             </div>
             <div class="flex items-center space-x-1 bg-white/80 px-2 py-1 rounded-xl border border-black/5 shadow-2xs">
@@ -111,22 +113,66 @@
             <div id="fullList" class="space-y-2.5"></div>
         </div>
 
-        <!-- 頁面 3: 照片牆 -->
+        <!-- 頁面 3: 相片展示櫃 (含 全部 / 支出 / 收入 分類) -->
         <div id="viewPhotos" class="view-section hidden space-y-3">
-            <h2 class="text-xs font-bold text-gray-500 tracking-wider px-1">相片展示牆</h2>
+            <div class="flex justify-between items-center px-1">
+                <h2 class="text-xs font-bold text-gray-500 tracking-wider">相片展示櫃</h2>
+                <div class="flex space-x-1 bg-white/80 p-1 rounded-xl border border-black/5 text-xs">
+                    <button onclick="filterPhotoCategory('all')" id="photoBtnAll" class="px-3 py-1 rounded-lg font-bold transition shadow-2xs bg-emerald-500 text-white">全部</button>
+                    <button onclick="filterPhotoCategory('expense')" id="photoBtnExpense" class="px-3 py-1 rounded-lg font-medium transition text-gray-600">支出</button>
+                    <button onclick="filterPhotoCategory('income')" id="photoBtnIncome" class="px-3 py-1 rounded-lg font-medium transition text-gray-600">收入</button>
+                </div>
+            </div>
             <div id="photoGrid" class="grid grid-cols-3 gap-2.5"></div>
             <div id="noPhotosMsg" class="hidden text-center py-12 bg-white/60 rounded-3xl storybook-card text-xs text-gray-400">
-                本月尚未上傳任何相片或收據喔！
+                目前沒有符合條件的照片或收據喔！
             </div>
         </div>
 
-        <!-- 頁面 4: 圖表分析 -->
+        <!-- 頁面 4: 多人分帳 -->
+        <div id="viewSplit" class="view-section hidden space-y-4">
+            <div class="bg-white/90 rounded-3xl p-5 storybook-card space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-bold text-gray-800 text-base"><i class="fa-solid fa-users-rectangle mr-1 text-blue-500"></i> 多人分帳算錢小幫手</h3>
+                    <button onclick="openSplitModal()" class="text-xs px-3 py-1.5 rounded-xl text-white font-bold shadow-xs transition" id="splitAddBtn"><i class="fa-solid fa-plus mr-1"></i> 新增分帳</button>
+                </div>
+                
+                <!-- 成員結算總覽 -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">成員結算清單</h4>
+                    <div id="splitSummaryList" class="space-y-2"></div>
+                </div>
+
+                <!-- 分帳紀錄列表 -->
+                <div class="space-y-2 pt-2 border-t">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">分帳明細紀錄</h4>
+                    <div id="splitItemList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁面 5: 圖表分析 -->
         <div id="viewCharts" class="view-section hidden space-y-4">
             <div class="bg-white/90 rounded-3xl p-5 storybook-card space-y-3">
                 <h3 class="text-xs font-bold text-gray-500 tracking-wider">本月支出分類統計</h3>
                 <div class="relative h-64 flex items-center justify-center">
                     <canvas id="expenseChart"></canvas>
                 </div>
+            </div>
+        </div>
+
+        <!-- 頁面 6: 匯率設定 -->
+        <div id="viewSettings" class="view-section hidden space-y-4">
+            <div class="bg-white/90 rounded-3xl p-5 storybook-card space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-bold text-gray-800 text-base"><i class="fa-solid fa-coins mr-1 text-amber-500"></i> 自訂外幣匯率設定</h3>
+                    <button onclick="resetExchangeRates()" class="text-xs text-gray-400 hover:text-gray-600 underline">恢復預設</button>
+                </div>
+                <p class="text-xs text-gray-500">設定 1 單位外幣相當於多少台幣 (TWD)。修改後記帳與分帳時會自動依照此匯率換算。</p>
+                
+                <div id="rateInputsContainer" class="space-y-3"></div>
+
+                <button onclick="saveCustomRates()" class="w-full py-3 text-white font-bold rounded-2xl text-sm shadow-md transition" id="saveRateBtn">儲存自訂匯率</button>
             </div>
         </div>
 
@@ -139,7 +185,7 @@
         </button>
     </nav>
 
-    <!-- 新增/編輯 Modal (點擊背景空白處可關閉) -->
+    <!-- 新增/編輯 記帳 Modal -->
     <div id="txModal" onclick="checkCloseModal(event, 'txModal')" class="fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
         <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -155,7 +201,6 @@
                     <button type="button" id="typeIncomeBtn" onclick="switchType('income')" class="py-2.5 rounded-xl text-sm font-bold transition text-gray-500">收入</button>
                 </div>
 
-                <!-- 幣別與金額設定 -->
                 <div class="grid grid-cols-3 gap-2">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">幣別</label>
@@ -174,7 +219,6 @@
                     </div>
                 </div>
 
-                <!-- 自動換算台幣提示區 -->
                 <div id="conversionInfo" class="hidden text-xs bg-emerald-50 text-emerald-700 p-2.5 rounded-xl flex justify-between items-center">
                     <span id="exchangeRateText">匯率換算中...</span>
                     <span id="convertedTwdText" class="font-bold text-sm"></span>
@@ -185,7 +229,6 @@
                     <input type="text" id="txTitle" required placeholder="例如：午餐、日本藥妝..." class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
                 </div>
 
-                <!-- 分類欄位 -->
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-xs font-medium text-gray-500">分類</label>
@@ -225,6 +268,61 @@
         </div>
     </div>
 
+    <!-- 新增/編輯 多人分帳 Modal -->
+    <div id="splitModal" onclick="checkCloseModal(event, 'splitModal')" class="fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="splitModalTitle" class="font-bold text-lg text-gray-800">新增分帳項目</h3>
+                <button onclick="closeSplitModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="splitForm" onsubmit="handleSplitSubmit(event)" class="space-y-4">
+                <input type="hidden" id="splitId">
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">消費項目名稱</label>
+                    <input type="text" id="splitTitle" required placeholder="例如：晚餐燒肉、門票..." class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none text-sm">
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">幣別</label>
+                        <select id="splitCurrency" onchange="calculateSplitConverted()" class="w-full px-3 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none text-sm font-bold">
+                            <option value="TWD">TWD 台幣</option>
+                            <option value="JPY">JPY 日幣</option>
+                            <option value="USD">USD 美元</option>
+                            <option value="EUR">EUR 歐元</option>
+                            <option value="KRW">KRW 韓元</option>
+                            <option value="CNY">CNY 人民幣</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">總金額</label>
+                        <input type="number" step="any" id="splitAmount" oninput="calculateSplitConverted()" required placeholder="0" class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none text-lg font-bold">
+                    </div>
+                </div>
+
+                <div id="splitConversionInfo" class="hidden text-xs bg-emerald-50 text-emerald-700 p-2.5 rounded-xl flex justify-between items-center">
+                    <span id="splitRateText">匯率換算中...</span>
+                    <span id="splitConvertedTwdText" class="font-bold text-sm"></span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">誰先代墊付錢？</label>
+                    <input type="text" id="splitPayer" required placeholder="例如：小明" class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">參與分帳成員 (用逗號隔開)</label>
+                    <input type="text" id="splitMembers" required value="小明, 小華, 小美" class="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:outline-none text-sm">
+                    <span class="text-[10px] text-gray-400 mt-1 block">例如輸入：小明, 小華, 小美 (會自動平均分攤)</span>
+                </div>
+
+                <button type="submit" id="splitSubmitBtn" class="w-full py-3.5 rounded-2xl text-white font-bold shadow-md transition">儲存分帳</button>
+            </form>
+        </div>
+    </div>
+
     <!-- 自訂新增分類 Modal -->
     <div id="addCatModal" onclick="checkCloseModal(event, 'addCatModal')" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
@@ -236,7 +334,7 @@
             <form onsubmit="handleAddCategory(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">分類名稱</label>
-                    <input type="text" id="newCatName" required placeholder="例如：寵物、醫療、兼職..." class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none text-sm">
+                    <input type="text" id="newCatName" required placeholder="例如：寵物、醫療..." class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none text-sm">
                 </div>
 
                 <div>
@@ -245,12 +343,12 @@
                     <input type="hidden" id="selectedIcon" value="fa-tag">
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl text-sm shadow-md hover:bg-emerald-600">確定新增</button>
+                <button type="submit" id="catSubmitBtn" class="w-full py-3 text-white font-bold rounded-xl text-sm shadow-md transition">確定新增</button>
             </form>
         </div>
     </div>
 
-    <!-- 詳細資訊 Modal (點擊背景空白處可關閉) -->
+    <!-- 詳細資訊 Modal -->
     <div id="detailModal" onclick="checkCloseModal(event, 'detailModal')" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
@@ -271,7 +369,6 @@
                 <div class="flex justify-between py-1 border-b border-gray-50"><span class="text-gray-400">備註</span><span id="detailNote" class="text-gray-700"></span></div>
             </div>
 
-            <!-- 點擊可看大圖的照片區域 -->
             <div id="detailPhotoSection" class="hidden">
                 <span class="block text-xs font-medium text-gray-400 mb-1">相片/收據 (點擊可看大圖)</span>
                 <img id="detailPhotoImg" onclick="openLightbox(this.src)" class="w-full h-40 object-cover rounded-2xl border border-gray-200 cursor-pointer hover:opacity-90 transition shadow-2xs">
@@ -290,23 +387,17 @@
     </div>
 
     <script>
-        // 預設匯率 (相對於 TWD 台幣)
-        const exchangeRates = {
-            TWD: 1,
-            JPY: 0.21,  // 1日圓 約 0.21台幣
-            USD: 32.5,  // 1美元 約 32.5台幣
-            EUR: 35.0,  // 1歐元 約 35.0台幣
-            KRW: 0.024, // 1韓元 約 0.024台幣
-            CNY: 4.5    // 1人民幣 約 4.5台幣
-        };
+        const defaultExchangeRates = { JPY: 0.21, USD: 32.5, EUR: 35.0, KRW: 0.024, CNY: 4.5 };
+        let exchangeRates = JSON.parse(localStorage.getItem('simple_account_rates')) || defaultExchangeRates;
 
+        // 六款主題色彩配置 (按鈕與重點顏色會隨主題動態變化)
         const themes = {
-            monet: { bodyBg: 'bg-[#F9FAF8]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A2B59F]', cardBg: 'bg-gradient-to-br from-[#E8EDE6]/70 to-[#F2EBEB]/70 storybook-card', mainBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]', submitBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]' },
-            feather: { bodyBg: 'bg-[#F7F8FA]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#838BB2]', cardBg: 'bg-gradient-to-br from-[#E2E6F2]/70 to-[#F5DDD5]/60 storybook-card', mainBtn: 'bg-[#838BB2] hover:bg-[#727a9e]', submitBtn: 'bg-[#838BB2] hover:bg-[#727a9e]' },
-            wood: { bodyBg: 'bg-[#F6F6F4]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#83B1C9]', cardBg: 'bg-gradient-to-br from-[#E5ECEE]/70 to-[#E4EBE1]/70 storybook-card', mainBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]', submitBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]' },
-            rose: { bodyBg: 'bg-[#FAF7F6]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#B97687]', cardBg: 'bg-gradient-to-br from-[#F4E8E1]/70 to-[#F1E4E3]/70 storybook-card', mainBtn: 'bg-[#B97687] hover:bg-[#a46777]', submitBtn: 'bg-[#B97687] hover:bg-[#a46777]' },
-            spring: { bodyBg: 'bg-[#F5F7F5]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A8C5B2]', cardBg: 'bg-gradient-to-br from-[#FAF0D9]/60 to-[#F8DCD5]/60 storybook-card', mainBtn: 'bg-[#A8C5B2] text-white hover:bg-[#94b19e]', submitBtn: 'bg-[#A8C5B2] text-white hover:bg-[#94b19e]' },
-            oil: { bodyBg: 'bg-[#F3F6F6]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A3B6C5]', cardBg: 'bg-gradient-to-br from-[#E2ECEB]/70 to-[#F2E8E8]/70 storybook-card', mainBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]', submitBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]' }
+            monet: { bodyBg: 'bg-[#F9FAF8]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A2B59F]', cardBg: 'bg-gradient-to-br from-[#E8EDE6]/70 to-[#F2EBEB]/70 storybook-card', mainBtn: 'bg-[#A2B59F] hover:bg-[#8e9f8b]' },
+            feather: { bodyBg: 'bg-[#F7F8FA]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#838BB2]', cardBg: 'bg-gradient-to-br from-[#E2E6F2]/70 to-[#F5DDD5]/60 storybook-card', mainBtn: 'bg-[#838BB2] hover:bg-[#727a9e]' },
+            wood: { bodyBg: 'bg-[#F6F6F4]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#83B1C9]', cardBg: 'bg-gradient-to-br from-[#E5ECEE]/70 to-[#E4EBE1]/70 storybook-card', mainBtn: 'bg-[#83B1C9] hover:bg-[#719cb3]' },
+            rose: { bodyBg: 'bg-[#FAF7F6]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#B97687]', cardBg: 'bg-gradient-to-br from-[#F4E8E1]/70 to-[#F1E4E3]/70 storybook-card', mainBtn: 'bg-[#B97687] hover:bg-[#a46777]' },
+            spring: { bodyBg: 'bg-[#F5F7F5]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A8C5B2]', cardBg: 'bg-gradient-to-br from-[#FAF0D9]/60 to-[#F8DCD5]/60 storybook-card', mainBtn: 'bg-[#A8C5B2] hover:bg-[#94b19e]' },
+            oil: { bodyBg: 'bg-[#F3F6F6]', headerBg: 'bg-white/80 backdrop-blur-md', logoIcon: 'bg-[#A3B6C5]', cardBg: 'bg-gradient-to-br from-[#E2ECEB]/70 to-[#F2E8E8]/70 storybook-card', mainBtn: 'bg-[#A3B6C5] hover:bg-[#90a2b1]' }
         };
 
         const defaultCategories = {
@@ -332,11 +423,13 @@
         let categories = JSON.parse(localStorage.getItem('simple_account_cats')) || defaultCategories;
         let currentTheme = localStorage.getItem('simple_account_theme') || 'monet';
         let transactions = JSON.parse(localStorage.getItem('simple_account_txs')) || [];
+        let splitItems = JSON.parse(localStorage.getItem('simple_account_splits')) || [];
         let currentDate = new Date();
         let currentType = 'expense';
         let currentPhotoBase64 = '';
         let activeDetailId = null;
         let chartInstance = null;
+        let currentPhotoFilter = 'all';
 
         window.onload = function() {
             document.getElementById('themeSelect').value = currentTheme;
@@ -345,18 +438,19 @@
             renderCategories();
             renderApp();
             renderIconPicker();
+            renderRateInputs();
+            renderSplitData();
         };
 
-        // 點擊背景空白處關閉視窗函式
         function checkCloseModal(event, modalId) {
             if (event.target.id === modalId) {
                 if (modalId === 'txModal') closeModal();
                 else if (modalId === 'addCatModal') closeAddCatModal();
                 else if (modalId === 'detailModal') closeDetailModal();
+                else if (modalId === 'splitModal') closeSplitModal();
             }
         }
 
-        // 圖片 Lightbox 放大檢視
         function openLightbox(src) {
             document.getElementById('lightboxImg').src = src;
             document.getElementById('lightboxModal').classList.remove('hidden');
@@ -365,33 +459,25 @@
             document.getElementById('lightboxModal').classList.add('hidden');
         }
 
-        // 外幣自動換算計算
-        function calculateConvertedAmount() {
-            const currency = document.getElementById('txCurrency').value;
-            const amountInput = parseFloat(document.getElementById('txAmount').value) || 0;
-            const infoBox = document.getElementById('conversionInfo');
-            
-            if (currency === 'TWD' || amountInput === 0) {
-                infoBox.classList.add('hidden');
-                return;
-            }
-
-            const rate = exchangeRates[currency] || 1;
-            const converted = Math.round(amountInput * rate * 100) / 100;
-            
-            document.getElementById('exchangeRateText').innerText = `使用參考匯率 1 ${currency} ≈ ${rate} TWD`;
-            document.getElementById('convertedTwdText').innerText = `≈ NT$ ${converted.toLocaleString()}`;
-            infoBox.classList.remove('hidden');
-        }
-
         function switchView(viewName) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             if (viewName === 'overview') document.getElementById('viewOverview').classList.remove('hidden');
             if (viewName === 'records') document.getElementById('viewRecords').classList.remove('hidden');
-            if (viewName === 'photos') document.getElementById('viewPhotos').classList.remove('hidden');
+            if (viewName === 'photos') {
+                document.getElementById('viewPhotos').classList.remove('hidden');
+                renderPhotoGrid();
+            }
+            if (viewName === 'split') {
+                document.getElementById('viewSplit').classList.remove('hidden');
+                renderSplitData();
+            }
             if (viewName === 'charts') {
                 document.getElementById('viewCharts').classList.remove('hidden');
                 renderChart();
+            }
+            if (viewName === 'settings') {
+                document.getElementById('viewSettings').classList.remove('hidden');
+                renderRateInputs();
             }
         }
 
@@ -408,7 +494,11 @@
             document.getElementById('logoIcon').className = `w-9 h-9 rounded-2xl flex items-center justify-center text-white shadow-xs ${t.logoIcon}`;
             document.getElementById('cardBg').className = `rounded-3xl p-4 text-gray-700 transition-all duration-300 ${t.cardBg}`;
             document.getElementById('mainActionBtn').className = `w-16 h-16 rounded-3xl shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 active:scale-95 transition-all ${t.mainBtn}`;
-            document.getElementById('submitBtn').className = `w-full py-3.5 rounded-2xl text-white font-bold shadow-md transition-all ${t.submitBtn}`;
+            document.getElementById('submitBtn').className = `w-full py-3.5 rounded-2xl text-white font-bold shadow-md transition-all ${t.mainBtn}`;
+            document.getElementById('saveRateBtn').className = `w-full py-3 text-white font-bold rounded-2xl text-sm shadow-md transition ${t.mainBtn}`;
+            document.getElementById('splitAddBtn').className = `text-xs px-3 py-1.5 rounded-xl text-white font-bold shadow-xs transition ${t.mainBtn}`;
+            document.getElementById('splitSubmitBtn').className = `w-full py-3.5 rounded-2xl text-white font-bold shadow-md transition ${t.mainBtn}`;
+            document.getElementById('catSubmitBtn').className = `w-full py-3 text-white font-bold rounded-xl text-sm shadow-md transition ${t.mainBtn}`;
         }
 
         function setTodayDate() {
@@ -421,6 +511,228 @@
             if (!document.getElementById('viewCharts').classList.contains('hidden')) renderChart();
         }
 
+        // 展示櫃分類切換
+        function filterPhotoCategory(type) {
+            currentPhotoFilter = type;
+            const t = themes[currentTheme] || themes.monet;
+            ['all', 'expense', 'income'].forEach(k => {
+                const btn = document.getElementById(`photoBtn${k.charAt(0).toUpperCase() + k.slice(1)}`);
+                if (k === type) {
+                    btn.className = `px-3 py-1 rounded-lg font-bold transition shadow-2xs text-white ${t.mainBtn}`;
+                } else {
+                    btn.className = 'px-3 py-1 rounded-lg font-medium transition text-gray-600 bg-transparent';
+                }
+            });
+            renderPhotoGrid();
+        }
+
+        function renderPhotoGrid() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+            const filtered = transactions.filter(t => {
+                const d = new Date(t.date);
+                const isMatchMonth = d.getFullYear() === year && (d.getMonth() + 1) === month;
+                const hasPhoto = t.photo;
+                const matchType = currentPhotoFilter === 'all' || t.type === currentPhotoFilter;
+                return isMatchMonth && hasPhoto && matchType;
+            });
+
+            const photoGrid = document.getElementById('photoGrid');
+            const noPhotosMsg = document.getElementById('noPhotosMsg');
+
+            if (filtered.length === 0) {
+                photoGrid.innerHTML = '';
+                noPhotosMsg.classList.remove('hidden');
+            } else {
+                noPhotosMsg.classList.add('hidden');
+                photoGrid.innerHTML = filtered.map(t => `
+                    <div onclick="openDetailModal('${t.id}')" class="aspect-square bg-white rounded-2xl overflow-hidden storybook-card cursor-pointer hover:opacity-90 transition relative">
+                        <img src="${t.photo}" class="w-full h-full object-cover">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/50 backdrop-blur-2xs text-white text-[10px] p-1.5 truncate text-center">${t.title}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 多人分帳功能
+        function openSplitModal() {
+            document.getElementById('splitForm').reset();
+            document.getElementById('splitId').value = '';
+            document.getElementById('splitModalTitle').innerText = '新增分帳項目';
+            document.getElementById('splitCurrency').value = 'TWD';
+            document.getElementById('splitConversionInfo').classList.add('hidden');
+            document.getElementById('splitModal').classList.remove('hidden');
+        }
+        function closeSplitModal() { document.getElementById('splitModal').classList.add('hidden'); }
+
+        function calculateSplitConverted() {
+            const currency = document.getElementById('splitCurrency').value;
+            const amountInput = parseFloat(document.getElementById('splitAmount').value) || 0;
+            const infoBox = document.getElementById('splitConversionInfo');
+            
+            if (currency === 'TWD' || amountInput === 0) {
+                infoBox.classList.add('hidden');
+                return;
+            }
+
+            const rate = exchangeRates[currency] || 1;
+            const converted = Math.round(amountInput * rate * 100) / 100;
+            
+            document.getElementById('splitRateText').innerText = `使用匯率 1 ${currency} ≈ ${rate} TWD`;
+            document.getElementById('splitConvertedTwdText').innerText = `≈ NT$ ${converted.toLocaleString()}`;
+            infoBox.classList.remove('hidden');
+        }
+
+        function handleSplitSubmit(e) {
+            e.preventDefault();
+            const currency = document.getElementById('splitCurrency').value;
+            const rawAmount = parseFloat(document.getElementById('splitAmount').value);
+            const title = document.getElementById('splitTitle').value;
+            const payer = document.getElementById('splitPayer').value.trim();
+            const membersInput = document.getElementById('splitMembers').value;
+            const members = membersInput.split(',').map(m => m.trim()).filter(m => m);
+
+            if (!rawAmount || !title || !payer || members.length === 0) {
+                alert('請完整填寫分帳資訊！');
+                return;
+            }
+
+            const rate = exchangeRates[currency] || 1;
+            const amountTwd = Math.round(rawAmount * rate * 100) / 100;
+
+            const id = document.getElementById('splitId').value || 'split_' + Date.now();
+            const splitData = { id, title, currency, rawAmount, amountTwd, payer, members };
+
+            const idx = splitItems.findIndex(s => s.id === id);
+            if (idx >= 0) splitItems[idx] = splitData;
+            else splitItems.unshift(splitData);
+
+            localStorage.setItem('simple_account_splits', JSON.stringify(splitItems));
+            renderSplitData();
+            closeSplitModal();
+        }
+
+        function renderSplitData() {
+            const itemList = document.getElementById('splitItemList');
+            const summaryList = document.getElementById('splitSummaryList');
+
+            if (splitItems.length === 0) {
+                itemList.innerHTML = '<div class="text-xs text-gray-400 text-center py-4">目前沒有分帳紀錄喔！</div>';
+                summaryList.innerHTML = '<div class="text-xs text-gray-400 text-center py-2">尚無成員結算資料</div>';
+                return;
+            }
+
+            // 計算各成員墊付與應付金額
+            const balances = {}; // { 成員名字: 淨額 (+表示別人欠他，-表示他欠別人) }
+            const paidStats = {}; // 總代墊
+            const shareStats = {}; // 應付總額
+
+            splitItems.forEach(item => {
+                const perShare = item.amountTwd / item.members.length;
+                
+                paidStats[item.payer] = (paidStats[item.payer] || 0) + item.amountTwd;
+
+                item.members.forEach(m => {
+                    shareStats[m] = (shareStats[m] || 0) + perShare;
+                });
+            });
+
+            const allMembers = Array.from(new Set([...Object.keys(paidStats), ...Object.keys(shareStats)]));
+            
+            summaryList.innerHTML = allMembers.map(m => {
+                const paid = paidStats[m] || 0;
+                const share = shareStats[m] || 0;
+                const diff = paid - share;
+                const diffClass = diff >= 0 ? 'text-emerald-600' : 'text-rose-600';
+                const diffText = diff >= 0 ? `可拿回 $${Math.round(diff).toLocaleString()}` : `需支付 $${Math.abs(Math.round(diff)).toLocaleString()}`;
+
+                return `
+                    <div class="flex justify-between items-center bg-gray-50 px-3 py-2.5 rounded-2xl border border-gray-100 text-xs">
+                        <span class="font-bold text-gray-800">${m}</span>
+                        <div class="text-right">
+                            <span class="text-gray-400 mr-2">墊 $${Math.round(paid).toLocaleString()} / 應付 $${Math.round(share).toLocaleString()}</span>
+                            <span class="font-bold ${diffClass}">${diffText}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            itemList.innerHTML = splitItems.map(item => `
+                <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100 text-xs space-y-1">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-gray-800 text-sm">${item.title}</span>
+                        <span class="font-bold text-gray-700">${item.currency !== 'TWD' ? `${item.currency} ${item.rawAmount} (NT$${item.amountTwd})` : `$${item.amountTwd}`}</span>
+                    </div>
+                    <div class="text-gray-400 flex justify-between">
+                        <span>代墊：<strong class="text-gray-600">${item.payer}</strong> | 參與：${item.members.join(', ')}</span>
+                        <button onclick="deleteSplit('${item.id}')" class="text-rose-500 hover:underline"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteSplit(id) {
+            if (confirm('確定刪除這筆分帳嗎？')) {
+                splitItems = splitItems.filter(s => s.id !== id);
+                localStorage.setItem('simple_account_splits', JSON.stringify(splitItems));
+                renderSplitData();
+            }
+        }
+
+        // 匯率設定
+        function renderRateInputs() {
+            const container = document.getElementById('rateInputsContainer');
+            container.innerHTML = Object.keys(exchangeRates).map(curr => `
+                <div class="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-2xl border border-gray-100">
+                    <span class="font-bold text-sm text-gray-700 w-16">${curr}</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-400">1 ${curr} =</span>
+                        <input type="number" step="any" id="rate_${curr}" value="${exchangeRates[curr]}" class="w-24 px-3 py-1.5 bg-white rounded-xl border border-gray-200 text-right text-sm font-bold focus:outline-none focus:ring-1 focus:ring-emerald-400">
+                        <span class="text-xs text-gray-400">TWD</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveCustomRates() {
+            Object.keys(exchangeRates).forEach(curr => {
+                const val = parseFloat(document.getElementById(`rate_${curr}`).value);
+                if (!isNaN(val) && val > 0) exchangeRates[curr] = val;
+            });
+            localStorage.setItem('simple_account_rates', JSON.stringify(exchangeRates));
+            alert('匯率設定已儲存成功！');
+            switchView('overview');
+            document.getElementById('viewSelect').value = 'overview';
+        }
+
+        function resetExchangeRates() {
+            if (confirm('確定要恢復預設匯率嗎？')) {
+                exchangeRates = { ...defaultExchangeRates };
+                localStorage.setItem('simple_account_rates', JSON.stringify(exchangeRates));
+                renderRateInputs();
+                alert('已恢復預設匯率！');
+            }
+        }
+
+        function calculateConvertedAmount() {
+            const currency = document.getElementById('txCurrency').value;
+            const amountInput = parseFloat(document.getElementById('txAmount').value) || 0;
+            const infoBox = document.getElementById('conversionInfo');
+            
+            if (currency === 'TWD' || amountInput === 0) {
+                infoBox.classList.add('hidden');
+                return;
+            }
+
+            const rate = exchangeRates[currency] || 1;
+            const converted = Math.round(amountInput * rate * 100) / 100;
+            
+            document.getElementById('exchangeRateText').innerText = `使用自訂匯率 1 ${currency} ≈ ${rate} TWD`;
+            document.getElementById('convertedTwdText').innerText = `≈ NT$ ${converted.toLocaleString()}`;
+            infoBox.classList.remove('hidden');
+        }
+
+        // 一般記帳功能
         function renderCategories() {
             const container = document.getElementById('categoryContainer');
             container.innerHTML = '';
@@ -471,12 +783,7 @@
             e.preventDefault();
             const name = document.getElementById('newCatName').value;
             const icon = document.getElementById('selectedIcon').value;
-            const newCat = {
-                id: 'custom_' + Date.now(),
-                name: name,
-                icon: icon,
-                color: 'bg-indigo-100 text-indigo-600'
-            };
+            const newCat = { id: 'custom_' + Date.now(), name, icon, color: 'bg-indigo-100 text-indigo-600' };
 
             categories[currentType].push(newCat);
             localStorage.setItem('simple_account_cats', JSON.stringify(categories));
@@ -489,7 +796,6 @@
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 const submitBtn = document.getElementById('submitBtn');
-                
                 submitBtn.disabled = true;
                 submitBtn.innerText = '圖片處理中...';
                 submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -498,31 +804,19 @@
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
-                        const MAX_WIDTH = 800;
-                        const MAX_HEIGHT = 800;
-                        let width = img.width;
-                        let height = img.height;
-
+                        const MAX_WIDTH = 800, MAX_HEIGHT = 800;
+                        let width = img.width, height = img.height;
                         if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                         } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                         }
-
                         const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
+                        canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
                         currentPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
                         document.getElementById('photoPreviewImg').src = currentPhotoBase64;
                         document.getElementById('photoPreviewContainer').classList.remove('hidden');
                         document.getElementById('photoFileName').innerText = '已成功載入並壓縮照片';
@@ -554,28 +848,13 @@
             const categoryVal = document.getElementById('txCategory').value;
             const dateVal = document.getElementById('txDate').value;
 
-            if (!rawAmount) { alert('請填寫金額！'); return; }
-            if (!titleVal) { alert('請填寫項目名稱！'); return; }
-            if (!categoryVal) { alert('請選擇分類！'); return; }
-            if (!dateVal) { alert('請選擇日期！'); return; }
+            if (!rawAmount || !titleVal || !categoryVal || !dateVal) { alert('請完整填寫欄位！'); return; }
 
-            // 計算最終台幣金額
             const rate = exchangeRates[currency] || 1;
             const finalTwdAmount = Math.round(rawAmount * rate * 100) / 100;
 
             const id = document.getElementById('txId').value || 'tx_' + Date.now();
-            const txData = {
-                id,
-                type: currentType,
-                currency,
-                rawAmount,
-                amount: finalTwdAmount, // 帳務計算統一使用台幣
-                title: titleVal,
-                category: categoryVal,
-                date: dateVal,
-                note: document.getElementById('txNote').value,
-                photo: currentPhotoBase64
-            };
+            const txData = { id, type: currentType, currency, rawAmount, amount: finalTwdAmount, title: titleVal, category: categoryVal, date: dateVal, note: document.getElementById('txNote').value, photo: currentPhotoBase64 };
 
             const idx = transactions.findIndex(t => t.id === id);
             if (idx >= 0) transactions[idx] = txData;
@@ -589,8 +868,6 @@
         function createItemHtml(t) {
             const allCats = [...categories.expense, ...categories.income];
             const catObj = allCats.find(c => c.id === t.category) || { name: '其他', icon: 'fa-circle', color: 'bg-gray-100 text-gray-600' };
-            
-            // 外幣標示處理
             const currencyText = (t.currency && t.currency !== 'TWD') ? `<span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded mr-1">${t.currency} ${t.rawAmount}</span>` : '';
 
             return `
@@ -640,23 +917,6 @@
 
             document.getElementById('recentList').innerHTML = filtered.slice(0, 3).map(createItemHtml).join('');
             document.getElementById('fullList').innerHTML = filtered.map(createItemHtml).join('');
-
-            const photoList = filtered.filter(t => t.photo);
-            const photoGrid = document.getElementById('photoGrid');
-            const noPhotosMsg = document.getElementById('noPhotosMsg');
-
-            if (photoList.length === 0) {
-                photoGrid.innerHTML = '';
-                noPhotosMsg.classList.remove('hidden');
-            } else {
-                noPhotosMsg.classList.add('hidden');
-                photoGrid.innerHTML = photoList.map(t => `
-                    <div onclick="openDetailModal('${t.id}')" class="aspect-square bg-white rounded-2xl overflow-hidden storybook-card cursor-pointer hover:opacity-90 transition relative">
-                        <img src="${t.photo}" class="w-full h-full object-cover">
-                        <div class="absolute bottom-0 inset-x-0 bg-black/50 backdrop-blur-2xs text-white text-[10px] p-1.5 truncate text-center">${t.title}</div>
-                    </div>
-                `).join('');
-            }
         }
 
         function openModal() {
@@ -686,7 +946,6 @@
             document.getElementById('detailAmount').innerText = `${t.type === 'income' ? '+' : '-'}$${t.amount.toLocaleString()} 台幣`;
             document.getElementById('detailAmount').className = `font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`;
 
-            // 外幣細節列顯示
             const foreignRow = document.getElementById('detailForeignRow');
             if (t.currency && t.currency !== 'TWD') {
                 document.getElementById('detailForeignAmount').innerText = `${t.currency} ${t.rawAmount.toLocaleString()}`;
